@@ -1,42 +1,84 @@
 import numpy as np
 import pandas as pd
 from pprint import pprint
-import random
-
-# print(random.seed(10))
-
-import scipy.stats as st
 import math
 
 
-x_men_bar = 45
-sd_men = 9
+def evq(base, dep):
+    evq_result = []
+    for vector in base:
+        evq_result.append(math.sqrt(sum((vector[ind] - val) ** 2 for ind, val in enumerate(dep))))
 
-x_w_bar = 34
-sd_w = 10
+    return evq_result
 
-n = 100
-alpha = 0.95
 
-se = math.sqrt(sd_men**2 / n + sd_w**2 / n)
-t = (x_men_bar - x_w_bar) / se
+def man(base, dep):
+    man_result = []
+    for vector in base:
+        man_result.append(sum(abs(vector[ind] - val) for ind, val in enumerate(dep)))
 
-df = n + n - 2
+    return man_result
 
-p_value = np.abs(st.t.ppf((1 - alpha) / 2, df))
 
-print(f"""t-value: {t}
-p-value for the {alpha * 100}% confidence interval: {p_value}
-""")
-if t > p_value:
-    print("rejecting the null hypothesis")
-elif t < p_value:
-    print("acepting the null hypothesis")
+def max_r(base, dep):
+    max_result = []
+    for vector in base:
+        max_result.append(max([abs(vector[ind] - val) for ind, val in enumerate(dep)]))
 
-    from scipy import stats
+    return max_result
 
-    ...
 
-from scipy import stats
-...
-print(stats.f.sf(3.5, 3, 15))
+def normalize(matrix):
+    norm_res = []
+    for row in matrix:
+        mx = max(row)
+        mn = min(row)
+        md = mx - mn
+        norm_row = [(val - mn) / md for val in row]
+        norm_res.append(norm_row)
+
+    return norm_res
+
+
+def predict_man(matrix, search_vector):
+    search_column = [row[-1] for row in matrix]
+    man_values = man(matrix, search_vector[:-1])
+    upside_down_man_values = [1 / i for i in man_values]
+    koef = 1 / sum(upside_down_man_values)
+    search_column_by_length = [val * upside_down_man_values[ind] for ind, val in enumerate(search_column)]
+    return koef * sum(search_column_by_length)
+
+
+a = [-1, 0]
+b = [1, 2]
+c = [2, -2]
+d = [-3, -1]
+e = [3, 2]
+
+q1 = [0, 0]
+
+
+# print(evq([a, b, c, d, e], q1))
+# print(man([a, b, c, d, e], q2))
+
+import sympy
+w1, w0 = sympy.symbols('w1 w0')
+y = sympy.simplify((1 - 2*w1 + w0)**2 +
+                   (1 - w1 + w0)**2 +
+                    (1-w0)**2+
+                   (1 - w1 - w0)**2 +
+                   (1 - 2*w1 - w0)**2)
+y1 = sympy.diff(y, w0)
+y2 = sympy.diff(y, w1)
+
+print(y1)
+print(y2)
+
+
+# P(A) = 0,70, P(B) = 0,30
+# P(1|A) = 0,10, P(1|B) = 0,50
+# P(A|1) - ?
+# P(A|1) = P(1|A) * P(A) / P(1)
+# P(1) = P(1|A) * P(A) + P(1|B) * P(B)
+# P(1) = 0,10 * 0,70 + 0,50 * 0,30 = 0,22
+# P(A|1) = 0.1 * 0.7 / 0.22
